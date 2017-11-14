@@ -28,3 +28,83 @@ read: 392808, total: 5150529, buffer size:10240000
 read: 4170318, total: 9320847, buffer size:10240000
 read: 919153, total: 10240000, buffer size:10240000
 recieve 10240000 
+
+发送10M的数据，是完全正常的。
+使用更大的缓冲区，对于大文件传输是很有利的。从上面来看，最大也就45KB，但是考虑到TCP的慢启动算法，以及接收窗口的限制。
+4.将客户端改为异步发送，此时就可以发送100M数据了:
+
+write: 2534020, total: 2534020, buffer size: 102400000
+read: 372096, total: 372096, buffer size:102400000
+write: 4189952, total: 6723972, buffer size: 102400000
+read: 547200, total: 919296, buffer size:102400000
+read: 1575936, total: 2495232, buffer size:102400000
+write: 4189952, total: 10913924, buffer size: 102400000
+read: 1920460, total: 4415692, buffer size:102400000
+read: 2225912, total: 6641604, buffer size:102400000
+write: 4189952, total: 15103876, buffer size: 102400000
+read: 2029508, total: 8671112, buffer size:102400000
+write: 4189952, total: 19293828, buffer size: 102400000
+read: 4255420, total: 12926532, buffer size:102400000
+write: 2225912, total: 21519740, buffer size: 102400000
+read: 4206852, total: 17133384, buffer size:102400000
+write: 4189952, total: 25709692, buffer size: 102400000
+read: 2160444, total: 19293828, buffer size:102400000
+write: 4189952, total: 29899644, buffer size: 102400000
+read: 5171972, total: 24465800, buffer size:102400000
+write: 2487784, total: 32387428, buffer size: 102400000
+read: 2880592, total: 27346392, buffer size:102400000
+write: 4189952, total: 36577380, buffer size: 102400000
+read: 1898572, total: 29244964, buffer size:102400000
+read: 3535272, total: 32780236, buffer size:102400000
+write: 4189952, total: 40767332, buffer size: 102400000
+read: 1898572, total: 34678808, buffer size:102400000
+write: 4189952, total: 44957284, buffer size: 102400000
+read: 4713696, total: 39392504, buffer size:102400000
+write: 2553252, total: 47510536, buffer size: 102400000
+read: 392808, total: 39785312, buffer size:102400000
+write: 4189952, total: 51700488, buffer size: 102400000
+read: 4517292, total: 44302604, buffer size:102400000
+write: 2225912, total: 53926400, buffer size: 102400000
+read: 261872, total: 44564476, buffer size:102400000
+write: 4189952, total: 58116352, buffer size: 102400000
+read: 4844632, total: 49409108, buffer size:102400000
+write: 1833104, total: 59949456, buffer size: 102400000
+read: 589212, total: 49998320, buffer size:102400000
+write: 4059016, total: 64008472, buffer size: 102400000
+read: 4975568, total: 54973888, buffer size:102400000
+write: 1833104, total: 65841576, buffer size: 102400000
+read: 654680, total: 55628568, buffer size:102400000
+read: 3862612, total: 59491180, buffer size:102400000
+write: 4189952, total: 70031528, buffer size: 102400000
+read: 1898572, total: 61389752, buffer size:102400000
+read: 3797144, total: 65186896, buffer size:102400000
+write: 4189952, total: 74221480, buffer size: 102400000
+read: 1898572, total: 67085468, buffer size:102400000
+write: 4189952, total: 78411432, buffer size: 102400000
+read: 4844632, total: 71930100, buffer size:102400000
+write: 2684188, total: 81095620, buffer size: 102400000
+read: 523744, total: 72453844, buffer size:102400000
+write: 4189952, total: 85285572, buffer size: 102400000
+read: 4713696, total: 77167540, buffer size:102400000
+write: 2029508, total: 87315080, buffer size: 102400000
+read: 392808, total: 77560348, buffer size:102400000
+write: 4189952, total: 91505032, buffer size: 102400000
+read: 4910100, total: 82470448, buffer size:102400000
+write: 1767636, total: 93272668, buffer size: 102400000
+read: 589212, total: 83059660, buffer size:102400000
+write: 4189952, total: 97462620, buffer size: 102400000
+read: 5041036, total: 88100696, buffer size:102400000
+write: 1636700, total: 99099320, buffer size: 102400000
+read: 720148, total: 88820844, buffer size:102400000
+read: 3797144, total: 92617988, buffer size:102400000
+write: 3300680, total: 102400000, buffer size: 102400000
+send 102400000 
+read: 1898572, total: 94516560, buffer size:102400000
+read: 3862612, total: 98379172, buffer size:102400000
+read: 1898572, total: 100277744, buffer size:102400000
+read: 2122256, total: 102400000, buffer size:102400000
+recieve 102400000 
+
+代码这里就是只用了一次发送，发送完了程序就退出.
+从上面可以看出，采用异步IO，发送的数据是不确定的。百M网在2-4M之间。客户端边发边收，就需要一个接收buffer和发送buffer——同步只需要一个：发完再收。
+结合2、4可以看出，当服务端解析速度远大于通讯速度时，采用同步IO可能不能通讯（服务端在会送应答时，客户端还在发送数据，导致客户端接收缓冲区满），当然这种情况很少，因为服务端还没有接收完数据就要开始写应答了。
