@@ -1,0 +1,30 @@
+1.发送1M数据, 服务端是只有1KB buffer：
+send 1024000 
+read: 339968, total: 339968, buffer size:1024000
+read: 349184, total: 689152, buffer size:1024000
+read: 334848, total: 1024000, buffer size:1024000
+recieve 1024000 
+
+发送是可以直接放入到发送缓冲区的，但是接收可能需要接收多次。此次实验每次大约接收33KB。
+TCP 屏蔽了两边的发送缓冲区，虽然服务端每次只发送了1KB，但是客户端还是会收到33KB。
+
+2.将服务端的缓冲增大（10M），客户端发送100M
+此种模式导致服务端发送一会数据之后，两边都会卡住。服务器读了数据之后，没有打印写！
+
+猜想是客户端采用同步发送，发送之后还没有调用read函数，导致TCP接收缓存已满
+
+3.客户端改为发送10M数据
+send 10240000 
+read: 960577, total: 960577, buffer size:10240000
+read: 523744, total: 1484321, buffer size:10240000
+read: 523744, total: 2008065, buffer size:10240000
+read: 458276, total: 2466341, buffer size:10240000
+read: 458276, total: 2924617, buffer size:10240000
+read: 458276, total: 3382893, buffer size:10240000
+read: 458276, total: 3841169, buffer size:10240000
+read: 458276, total: 4299445, buffer size:10240000
+read: 458276, total: 4757721, buffer size:10240000
+read: 392808, total: 5150529, buffer size:10240000
+read: 4170318, total: 9320847, buffer size:10240000
+read: 919153, total: 10240000, buffer size:10240000
+recieve 10240000 
